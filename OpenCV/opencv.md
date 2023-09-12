@@ -27,9 +27,72 @@
 cv2.cvtColor(input_image,flag=cv2.COLOR_BGR2GRAY),
 Gray = 0.29900×R + 0.58700×G + 0.11400×B
 
-## 图像加法（cv2.add()）与图像融合（cv2.addWeighted()）
+## 基本操作
+
+### 图像加法（cv2.add()）与图像融合（cv2.addWeighted()）
 1. 图像加法：目标图像 = 图像1 + 图像2
 2. 图像融合：目标图像 = 图像1 × 系数1 + 图像2 × 系数2 + 亮度调节量
+### 单通道图像取像素
+img.at<unchar>(row,col) = 0；
+### 彩色图像取像素
+img.at<Vec3b>(row,col)[0] = 0;
+### 彩色图像通道分离与合并
+cv::Mat mv[3]; cv::split(img,mv);//分离顺序为B、G、R。
+merge(mv,3,result);
+
+### 彩色图转灰度图
+
+1. cv::imread("t.jpg",IMREAD_GRAYSCALE);
+2. cv::cvtColor(img,COLOR_BGR2GRAY);
+
+### 图像二值化
+
+```py3
+cv::threshold( InputArray src, OutputArray dst,
+                               double thresh, double maxval, int type );
+```
+
+@param src 输入数组（多通道、8 位或 32 位浮点）。
+@param dst 与 src 具有相同大小和类型以及相同通道数的输出数组。
+@param thresh 阈值。
+@param maxval 与 #THRESH_BINARY 和 #THRESH_BINARY_INV 阈值类型一起使用的最大值。
+@param type 阈值类型（请参阅#ThresholdTypes）。
+@return 如果使用 Otsu 或 Triangle 方法，则计算阈值。
+
+### 图像翻转
+
+1. flip(img,0)  垂直翻转
+2. flip(img,1)  水平翻转
+
+### 图像划线
+
+cv::line(Mat& img, Point pt1, Point pt2, const Scalar& color, int thickness=1, int lineType=8, int shift=0);
+
+第一个参数：表示要绘制线段的图像。
+第二个参数：表示线段的起点。
+第三个参数：表示线段的终点。
+第四个参数：表示线段的颜色。
+第五个参数：表示线段的粗细。
+第六个参数：表示线段的类型。可以取值8，4，和CV_AA，分别代表8邻接连接线，4邻接连接线和反锯齿连接线。默认值为8。
+第七个参数：表示坐标点小数点位数。
+
+### 添加文字
+
+void putText(Mat& img, const string& text, Point org, int fontFace, double fontScale, Scalar color, int thickness=1, int lineType=8, bool bottomLeftOrigin=false);
+第一个参数：表示要添加文字的图像。
+第二个参数：表示要添加的文字。
+第三个参数：表示文字在图像左下角的坐标。
+第四个参数：表示字体的类型。
+FONT_HERSHEY_SIMPLEX, FONT_HERSHEY_PLAIN,
+FONT_HERSHEY_DUPLEX,FONT_HERSHEY_COMPLEX,
+FONT_HERSHEY_TRIPLEX, FONT_HERSHEY_COMPLEX_SMALL,
+FONT_HERSHEY_SCRIPT_SIMPLEX, FONT_HERSHEY_SCRIPT_COMPLEX
+以上所有类型都可以配合 FONT_HERSHEY_ITALIC使用，产生斜体效果。
+第五个参数：表示字体的大小。
+第六个参数：表示字体的颜色。
+第七个参数：表示字体的粗细。
+第八个参数：表示线条的类型。
+第九个参数：true, 图像数据原点在左下角. false, 图像数据原点在左上角。
 
 ## 图像滤波
 1. 低通滤波器：去除图像中的高频部分——模糊化
@@ -37,7 +100,66 @@ Gray = 0.29900×R + 0.58700×G + 0.11400×B
 3. 线性滤波器：方框滤波、均值滤波、高斯滤波
 4. 非线性滤波：中值滤波、双边滤波
 
+## 图像仿射变换与透视变换
+
+1. 仿射变换是二维到二维的变换，包括旋转，平移，错切，缩放
+
+   ![fashe](fashe.png)
+
+    ```python
+    import cv2 as cv
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    img = cv.imread('drawing.jpg')
+    rows, cols = img.shape[:2]
+
+    # 变换前的三个点
+    pts1 = np.float32([[50, 65], [150, 65], [210, 210]])
+    # 变换后的三个点
+    pts2 = np.float32([[50, 100], [150, 65], [100, 250]])
+
+    # 生成变换矩阵
+    M = cv.getAffineTransform(pts1, pts2)
+    # 第三个参数为dst的大小
+    dst = cv.warpAffine(img, M, (cols, rows))
+
+    plt.subplot(121), plt.imshow(img), plt.title('input')
+    plt.subplot(122), plt.imshow(dst), plt.title('output')
+    plt.show()
+    ```
+
+2. 透视变换，从二维到三维再到二维的过程
+
+   <img src="webp2" alt="img" style="zoom:50%;" />
+   
+   <img src="webp" alt="img" style="zoom:50%;" />
+   
+   ```python
+   import numpy as np
+   import cv2 as cv
+   import matplotlib.pyplot as plt
+   img = cv.imread('card.jpg')
+   
+   # 原图中卡片的四个角点
+   pts1 = np.float32([[148, 80], [437, 114], [94, 247], [423, 288]])
+   # 变换后分别在左上、右上、左下、右下四个点
+   pts2 = np.float32([[0, 0], [320, 0], [0, 178], [320, 178]])
+   
+   # 生成透视变换矩阵
+   M = cv.getPerspectiveTransform(pts1, pts2)
+   # 进行透视变换，参数3是目标图像大小
+   dst = cv.warpPerspective(img, M, (320, 178))
+   
+   plt.subplot(121), plt.imshow(img[:, :, ::-1]), plt.title('input')
+   plt.subplot(122), plt.imshow(dst[:, :, ::-1]), plt.title('output')
+   plt.show()
+   ```
+   
+   
+
 ## 插值算法
+
 1. 近邻：寻找最近的一个点作为其值
 2. 线性插值： 找最近的两个点，然后线性计算
 3. 双线性插值（三次内插）： 找周围的最近的四个点，然后先两次X方向插值，然后一次Y方向插值。
