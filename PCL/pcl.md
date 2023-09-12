@@ -51,6 +51,65 @@
 角度空间的迭代最近点算法
 
 
+## 计算PCA的两种方式
+1. Eigen 求解
+```C++
+Eigen::Vector4f pcaCentroidtarget;//容量为4的列向量
+pcl::compute3DCentroid(*target, pcaCentroidtarget);//计算目标点云质心
+Eigen::Matrix3f covariance;//创建一个3行3列的矩阵，里面每个元素均为float类型
+pcl::computeCovarianceMatrixNormalized(*target, pcaCentroidtarget, covariance);//计算目标点云协方差矩阵
+Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eigen_solver(covariance, Eigen::ComputeEigenvectors);//构造一个计算特定矩阵的类对象
+Eigen::Matrix3f eigenVectorsPCA = eigen_solver.eigenvectors();//eigenvectors计算特征向量
+Eigen::Vector3f eigenValuesPCA = eigen_solver.eigenvalues();//eigenvalues计算特征值
+cout << eigenVectorsPCA <<endl;
+```
+输出如下：
+
+-0.0274781  -0.0814317  0.9963
+
+0.0344833   -0.99616 -0.0804692
+
+0.999027 0.0321446   0.0301806
+
+第一列为最小特征向量。
+2. 直接pca
+```c++
+#include <pcl/common/pca.h>
+pcl::PCA<pcl::PointXYZ> pca;       // PCA算法
+pcl::PointCloud<pcl::PointXYZ> objProj;
+pca.setInputCloud(target);                          //设置输入点云
+Eigen::Matrix3f EigenSpaceObj = pca.getEigenVectors(); //获取特征向量
+cout<<EigenSpaceObj<<endl;
+```
+输出如下：
+
+0.9963   -0.0814287  -0.0274762
+
+-0.0804664  -0.996161   0.0344773
+
+ 0.0301782  0.032139 0.999028
+
+第一列为最大特征向量。
+3. 求两个特征向量的变换矩阵
+```c++
+//求两向量旋转矩阵
+Eigen::Matrix3d rotationMatrix;
+Eigen::Vector3d v1(eigenVectorsPCA(0,2), eigenVectorsPCA(1,2), eigenVectorsPCA(2,2));
+Eigen::Vector3d w1(model_eigenVectorsPCA(0,2),model_eigenVectorsPCA(1,2),model_eigenVectorsPCA(2,2) );
+rotationMatrix = Eigen::Quaterniond::FromTwoVectors(w1, v1).toRotationMatrix();
+
+std::cout << "rotationMatrix  is:" << std::endl;
+cout << rotationMatrix <<endl;
+cout << rotationMatrix * w1 <<endl;
+
+Eigen::Matrix4d transformMatrix;
+transformMatrix.setIdentity();
+// 平移向量
+Eigen::Vector3d t(pcaCentroidsource[0] - pcaCentroidtarget[0], pcaCentroidsource[1] - pcaCentroidtarget[1],
+pcaCentroidsource[2] - pcaCentroidtarget[2]);
+transformMatrix.block<3, 3>(0, 0) = rotationMatrix;
+transformMatrix.topRightCorner(3, 1) = -t;
+```
 
 ## 学习资料参考
 
