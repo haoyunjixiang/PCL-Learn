@@ -285,7 +285,44 @@ Rvalue ref
 
    
 
+## C++11新特性
 
+1. 并发编程
+
+2. 泛型编程
+
+   + llambda表达式书写格式：[capture-list] (parameters) mutable -> return-type { statement
+     }
+     [capture-list] : 捕捉列表，该列表总是出现在lambda函数的开始位置，编译器根据[]来判断接下来的代码是否为lambda函数，捕捉列表能够捕捉上下文中的变量供lambda函数使用。
+     (parameters)：参数列表。与普通函数的参数列表一致，如果不需要参数传递，则可以 连同()一起省略
+     mutable：默认情况下，lambda函数总是一个const函数，mutable可以取消其常量性。使用该修饰符时，参数列表不可省略(即使参数为空)。
+     ->returntype：返回值类型。用追踪返回类型形式声明函数的返回值类型，没有返回值时此部分可省略。返回值类型明确情况下，也可省略，由编译器对返回类型进行推导。
+     {statement}：函数体。在该函数体内，除了可以使用其参数外，还可以使用所有捕获 到的变量。
+
+     ```c++
+     sort(v.begin(), v.end(), [](const Goods& g1, const Goods& g2)
+     {
+     return g1._price > g2._price;
+     }); //按价格降序排序
+     ```
+
+     
+
+3. 简化使用
+
+   + auto for
+
+     ```C++
+     for (auto element : container) {
+         // 操作每个元素
+     }
+     ```
+
+   + 共享指针 share_ptr
+
+   + 大括号同一初始化
+
+4. 其他 [参考](https://zhuanlan.zhihu.com/p/650986900)
 
 
 ## C++ 进阶书籍推荐

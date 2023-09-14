@@ -94,6 +94,21 @@ FONT_HERSHEY_SCRIPT_SIMPLEX, FONT_HERSHEY_SCRIPT_COMPLEX
 第八个参数：表示线条的类型。
 第九个参数：true, 图像数据原点在左下角. false, 图像数据原点在左上角。
 
+
+
+### 图像寻找轮廓
+
+1. cv::findContours(img,mode,method)	[参考](https://blog.csdn.net/zhuoqingjoking97298/article/details/122765159)
+
+   + img  二值化图像
+
+   + 轮廓检索模式： RETR_TREE 所有轮廓；RETR_CCOMP 所有轮廓，并分为两层；RETR_LIST 所有轮廓保存到链表中；RETR_EXTERNAL:只检索最外面的
+   + 轮廓逼近方法 CHAIN_APPROX_NONE输出所有轮廓点集;CHAIN_APPROX_SIMPLE压缩水平，垂直，斜的部分，只保留端点
+
+2. 最小外接矩形 RotatedRect rotated_rect = minAreaRect(ployPoints);
+
+3. 外接矩形 cv2::boundingRect(cont)
+
 ## 图像滤波
 1. 低通滤波器：去除图像中的高频部分——模糊化
 2. 高通滤波器：去除图像中的低频部分——锐化
