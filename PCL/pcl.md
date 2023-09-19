@@ -131,11 +131,24 @@
    
    
    
-   
-   
-   
-   
-   
+
+### 4PCS
+
+在ransac的基础上，使用共面的4个点进行配准。该方法适用于重叠区域较小或者重叠区域发生较大变化场景点云配准，无需对输入数据进行预滤波和去噪，算法能够快速准确的完成点云配准。
+
+### K4PCS
+
+1. 体素下采样，然后3D提取关键点
+2. 基于关键点而不是全局点云进行匹配，加快了匹配速度
+
+### SAC-IA
+
+1. 随机在原点云采样m个点
+2. 然后在目标点云找寻FPFH特征相似的m个点。
+3. 利用这m组点计算变换矩阵
+4. 保存变换误差
+5. 迭代找寻最小误差
+
 ### ICP精配准
 差不多五种实现：
 （1）pcl::GeneralizedIterativeClosestPoint< PointSource, PointTarget >：
@@ -368,7 +381,70 @@ transform_2.translation() << 2.5, 0.0, 0.0;
 transform_2.rotate (Eigen::AngleAxisf (theta, Eigen::Vector3f::UnitZ()));
 ```
 
+### AngleAxis(angle, axis)
 
+绕该轴逆时针旋转angle(弧度)角度。
+```c++
+Eigen::AngleAxisd rotation_vector(M_PI / 4, Eigen::Vector3d(0, 0, 1)); //沿 Z 轴旋转 45 度
+Eigen::Vector3d v(1, 0, 0);
+Eigen::Vector3d v_rotated = rotation_vector * v;
+```
+
+### 四元素旋转
+
+1. 基本运算
+
+```c++
+Eigen::Quaterniond q = Eigen::Quaterniond(rotation_vector);
+cout << "quaternion = \n" << q.coeffs() << endl;   // 请注意coeffs的顺序是(x,y,z,w),w为实部，
+q = Eigen::Quaterniond(rotation_matrix);
+cout << "quaternion = \n" << q.coeffs() << endl;
+// 使用四元数旋转一个向量，使用重载的乘法即可
+v_rotated = q * v; 
+```
+
+2. 赋值
+
+   +  // 1、直接赋值，赋值顺序为[w,x,y,z]
+          Eigen::Quaterniond q1(1.0, 0.0, 0.0, 0.0);
+   + // 旋转向量赋值
+         // 旋转向量使用 AngleAxis, 它底层不直接是Matrix，但运算可以当作矩阵（因为重载了运算符）
+         Eigen::AngleAxisd rotation_vector(M_PI / 4, Eigen::Vector3d(0, 0, 1));     //沿 Z 轴旋转 45 度
+         Eigen::Quaterniond q4;
+         q4= Eigen::Quaterniond(rotation_vector);
+         cout << "旋转向量赋值：quaternion = \n" << q4.coeffs() << endl;   
+   + // 初始化欧拉角(Z-Y-X，即RPY, 先绕x轴roll,再绕y轴pitch,最后绕z轴yaw)
+         Eigen::Vector3d ea(0.785398, -0, 0);
+         Eigen::Quaterniond quaternion3;
+         quaternion3 = Eigen::AngleAxisd(ea[0], Eigen::Vector3d::UnitZ()) *
+             Eigen::AngleAxisd(ea[1], Eigen::Vector3d::UnitY()) *
+             Eigen::AngleAxisd(ea[2], Eigen::Vector3d::UnitX());
+
+3. 转换
+
+   + 转旋转矩阵 
+
+     // 初始化欧拉角(Z-Y-X，即RPY, 先绕x轴roll,再绕y轴pitch,最后绕z轴yaw)
+         Eigen::Vector3d ea(0.785398, -0, 0);
+         Eigen::Quaterniond quaternion3;
+         quaternion3 = Eigen::AngleAxisd(ea[0], Eigen::Vector3d::UnitZ()) *
+             Eigen::AngleAxisd(ea[1], Eigen::Vector3d::UnitY()) *
+             Eigen::AngleAxisd(ea[2], Eigen::Vector3d::UnitX());
+
+   + 转旋转向量
+
+     Eigen::Quaterniond q9(1.0, 0.0, 0.0, 0.0);
+         Eigen::AngleAxisd rotation_vector9(q9);
+         //或者
+         Eigen::AngleAxisd rotation_vector9_1;
+         rotation_vector9_1 = q9;
+         cout << "rotation_vector9 " << "angle is: " << rotation_vector9.angle() * (180 / M_PI)
+             << " axis is: " << rotation_vector9.axis().transpose() << endl;
+
+   + 转欧拉角
+
+      Eigen::Vector3d eulerAngle = q9.matrix().eulerAngles(2, 1, 0);
+         cout << "yaw(z) pitch(y) roll(x) = " << eulerAngle.transpose() << endl;
 
 ## 学习资料参考
 
