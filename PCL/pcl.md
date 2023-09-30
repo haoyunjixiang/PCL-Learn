@@ -138,6 +138,8 @@
    
    
    
+   
+   
 
 ### 4PCS
 
@@ -606,6 +608,25 @@ chull.reconstruct(*cloud_hull);
 
    + 以点P为中心，建立多个不同半径的同心球
    + 统计落在不同区域的点的个数，每个点有权重（与该区域的体积，密度相关）
+
+
+
+## 深度学习分类方法
+
+1. pointnet
+2. pointnet++
+3. GCN算法
+
+## 深度学习检测方法
+
+1. voxelnet
+2. pointPilars
+3. pointRCNN
+
+## 深度学习特征描述方法
+
+1. USIP
+2. so-net
 
 ## 学习资料参考
 
