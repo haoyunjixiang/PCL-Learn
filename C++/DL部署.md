@@ -41,3 +41,9 @@
 7. groups
 8. bias
 9. padding_mode
+
+## SSD与YOLO的区别
+
+1. SSD在卷积后输出，YOLO是全连接后输出
+2. SSD使用先验框anchor，YOLO是直接进行预测。
+3. SSD在三个卷积层进行输出，YOLO在一个全连接后输出
